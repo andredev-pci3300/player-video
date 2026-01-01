@@ -3,33 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Cine</title>
+    <title>Cine André</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div id="list-view">
-            <h1>Projeto Ark</h1>
-            <div id="video-list" class="grid-container"></div>
-        </div>
+    <div class="app-layout">
+        
+        <aside class="sidebar">
+            <h2>Lista de Episódios</h2>
+            <div id="video-list-sidebar"></div>
+        </aside>
 
-        <div id="player-view" class="hidden">
-            <div class="controls-bar">
-                <button class="btn-control" onclick="closePlayer()">← Voltar</button>
-                <button id="btn-cc" class="btn-control btn-cc-off" onclick="toggleCaptions()">
-                    💬 Legenda: OFF
-                </button>
-            </div>
+        <main class="content-area">
             
-            <h2 id="player-title">Título do Vídeo</h2>
-            
-            <div class="video-wrapper">
-                <video id="main-video" controls controlsList="nodownload" playsinline>
-                    Seu navegador não suporta HTML5.
-                </video>
+            <div id="placeholder-message">
+                <p>👈 Selecione um episódio ao lado para começar.</p>
             </div>
-        </div>
+
+            <div id="player-container" class="hidden">
+                <div class="controls-bar">
+                    <button id="btn-cc" class="btn-control btn-cc-off" onclick="toggleCaptions()">
+                        💬 Legenda: OFF
+                    </button>
+                </div>
+                
+                <h2 id="player-title"></h2>
+                
+                <div class="video-wrapper">
+                    <video id="main-video" controls controlsList="nodownload" playsinline>
+                        Seu navegador não suporta HTML5.
+                    </video>
+                </div>
+            </div>
+
+        </main>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>

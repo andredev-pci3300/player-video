@@ -1,45 +1,64 @@
 // ATENÇÃO: Você substituirá esta URL no Passo 3
 const R2_BUCKET_URL = 'https://pub-2e66800a99034299b0fc77537b67b486.r2.dev'; 
 
-const listView = document.getElementById('list-view');
-const playerView = document.getElementById('player-view');
+// Referências aos elementos do HTML
+const sidebarList = document.getElementById('video-list-sidebar');
+const placeholderMessage = document.getElementById('placeholder-message');
+const playerContainer = document.getElementById('player-container');
+
 const videoEl = document.getElementById('main-video');
 const titleEl = document.getElementById('player-title');
 const ccButton = document.getElementById('btn-cc');
 
-// 1. Carregar lista de vídeos
+// 1. Carregar lista de vídeos na BARRA LATERAL
 fetch('videos.json')
     .then(r => r.json())
     .then(videos => {
-        const list = document.getElementById('video-list');
-        list.innerHTML = ''; // Garante lista limpa
-        videos.forEach(v => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<h3>${v.title}</h3>`;
-            card.onclick = () => openPlayer(v);
-            list.appendChild(card);
+        sidebarList.innerHTML = ''; // Limpa a lista
+        
+        videos.forEach((v, index) => {
+            // VOLTOU AO ORIGINAL: Usa o título exato do JSON
+            const btn = document.createElement('button');
+            btn.className = 'sidebar-btn';
+            btn.innerText = v.title; // <--- Aqui está a mudança (era formatarNome)
+            btn.dataset.index = index; 
+
+            // Ao clicar, abre o player e destaca o botão
+            btn.onclick = () => {
+                openPlayer(v);
+                highlightActiveButton(btn);
+            };
+            
+            sidebarList.appendChild(btn);
         });
     })
     .catch(err => console.error("Erro ao carregar JSON:", err));
 
-// 2. Abrir Player
+// Função auxiliar para destacar o botão clicado
+function highlightActiveButton(clickedBtn) {
+    const allBtns = document.querySelectorAll('.sidebar-btn');
+    allBtns.forEach(b => b.classList.remove('active'));
+    clickedBtn.classList.add('active');
+}
+
+// 2. Abrir Player (Na área direita)
 async function openPlayer(video) {
-    listView.classList.add('hidden');
-    playerView.classList.remove('hidden');
-    titleEl.innerText = video.title;
+    // Troca a visibilidade
+    placeholderMessage.classList.add('hidden');
+    playerContainer.classList.remove('hidden');
     
-    // Reseta estado do botão de legenda
+    // VOLTOU AO ORIGINAL: Usa o título do JSON no topo do player
+    titleEl.innerText = video.title; 
+    
+    // Reseta botão de legenda
     ccButton.innerText = "💬 Legenda: OFF";
     ccButton.className = "btn-control btn-cc-off";
-    ccButton.style.display = 'none'; // Esconde até confirmar que existe legenda
+    ccButton.style.display = 'none'; 
 
-    // Define fonte do vídeo
     videoEl.src = `${R2_BUCKET_URL}/${video.filename}`;
-    videoEl.innerHTML = ''; // Limpa trilhas antigas
+    videoEl.innerHTML = ''; 
 
-    // Lógica para encontrar o nome do arquivo .srt
-    // Remove a extensão (.mp4 ou .mkv) e adiciona .srt
+    // Lógica da Legenda
     const baseName = video.filename.substring(0, video.filename.lastIndexOf('.'));
     const srtUrl = `${R2_BUCKET_URL}/${baseName}.srt`;
 
@@ -54,20 +73,16 @@ async function openPlayer(video) {
             track.label = 'Português';
             track.srclang = 'pt';
             track.src = URL.createObjectURL(vttBlob);
-            
-            // CONFIGURAÇÃO CRÍTICA:
-            // Adiciona a trilha, mas não define como default
             track.default = false; 
+            
             videoEl.appendChild(track);
 
-            // Força o modo 'hidden' (carregado mas invisível) após um breve delay
             setTimeout(() => {
                 if (videoEl.textTracks[0]) {
                     videoEl.textTracks[0].mode = 'hidden';
                 }
             }, 100);
             
-            // Mostra o botão pois a legenda existe
             ccButton.style.display = 'inline-block';
         }
     } catch (err) {
@@ -78,10 +93,9 @@ async function openPlayer(video) {
     videoEl.play();
 }
 
-// 3. Função do Botão de Legenda
+// 3. Alternar Legenda
 function toggleCaptions() {
     if (!videoEl.textTracks[0]) return;
-
     const track = videoEl.textTracks[0];
     
     if (track.mode === 'showing') {
@@ -95,15 +109,7 @@ function toggleCaptions() {
     }
 }
 
-// 4. Fechar Player
-function closePlayer() {
-    videoEl.pause();
-    videoEl.src = '';
-    playerView.classList.add('hidden');
-    listView.classList.remove('hidden');
-}
-
-// 5. Conversor SRT -> WebVTT
+// 4. Conversor SRT -> WebVTT
 function srtToVtt(data) {
     let vtt = "WEBVTT\n\n";
     vtt += data.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
