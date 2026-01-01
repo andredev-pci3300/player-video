@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Galeria de Vídeos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="list-view">
+            <h1>Galeria Pessoal</h1>
+            <div id="video-list" class="grid-container"></div>
+        </div>
+
+        <div id="player-view" class="hidden">
+            <button class="btn-back" onclick="closePlayer()">← Voltar</button>
+            <h2 id="player-title">Título do Vídeo</h2>
+            <div class="video-wrapper">
+                <video id="main-video" controls controlsList="nodownload" playsinline>
+                    Seu navegador não suporta HTML5.
+                </video>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
