@@ -8,8 +8,9 @@ const playerContainer = document.getElementById('player-container');
 const videoEl = document.getElementById('main-video');
 const titleEl = document.getElementById('player-title');
 const ccButton = document.getElementById('btn-cc');
+const spinner = document.getElementById('loading-spinner');
 
-// 1. Carregar Lista
+// 1. Carregar Lista de Vídeos
 fetch('videos.json')
     .then(r => r.json())
     .then(videos => {
@@ -17,7 +18,7 @@ fetch('videos.json')
         videos.forEach((v, index) => {
             const btn = document.createElement('button');
             btn.className = 'sidebar-btn';
-            btn.innerText = v.title; // Usa título do JSON
+            btn.innerText = v.title; // Título exato do JSON
             btn.dataset.index = index; 
 
             btn.onclick = () => {
@@ -27,35 +28,38 @@ fetch('videos.json')
             sidebarList.appendChild(btn);
         });
     })
-    .catch(err => console.error("Erro JSON:", err));
+    .catch(err => console.error("Erro ao carregar JSON:", err));
 
+// Helper para destacar botão ativo
 function highlightActiveButton(clickedBtn) {
     document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
     clickedBtn.classList.add('active');
 }
 
-// 2. Abrir Player
+// 2. Abrir Player (Lógica Principal)
 async function openPlayer(video) {
     placeholderMessage.classList.add('hidden');
     playerContainer.classList.remove('hidden');
     
+    // Mostra spinner imediatamente ao trocar de vídeo
+    spinner.classList.remove('hidden');
+
     titleEl.innerText = video.title;
     
-    // Reset Botão Legenda
+    // Reset da Legenda
     ccButton.innerText = "💬 Legenda: OFF";
     ccButton.className = "btn-control btn-cc-off";
     ccButton.style.display = 'none'; 
 
     videoEl.src = `${R2_BUCKET_URL}/${video.filename}`;
-    videoEl.innerHTML = ''; 
+    videoEl.innerHTML = ''; // Limpa tracks anteriores
 
-    // --- SCROLL AUTOMÁTICO PARA MOBILE ---
-    // Se a tela for pequena, rola para o topo para ver o vídeo
+    // Mobile: Scroll automático para o topo
     if (window.innerWidth <= 900) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Carregar Legenda
+    // Carregar Legenda SRT -> VTT
     const baseName = video.filename.substring(0, video.filename.lastIndexOf('.'));
     const srtUrl = `${R2_BUCKET_URL}/${baseName}.srt`;
 
@@ -74,6 +78,7 @@ async function openPlayer(video) {
             
             videoEl.appendChild(track);
 
+            // Garante que a legenda esteja carregada mas oculta
             setTimeout(() => {
                 if(videoEl.textTracks[0]) videoEl.textTracks[0].mode = 'hidden';
             }, 100);
@@ -83,10 +88,13 @@ async function openPlayer(video) {
     } catch (err) { console.warn('Sem legenda:', err); }
 
     videoEl.load();
-    videoEl.play();
+    videoEl.play().catch(e => {
+        console.log("Autoplay bloqueado, aguardando clique.");
+        spinner.classList.add('hidden');
+    });
 }
 
-// 3. Toggle Legenda
+// 3. Alternar Legenda
 function toggleCaptions() {
     if (!videoEl.textTracks[0]) return;
     const track = videoEl.textTracks[0];
@@ -102,7 +110,23 @@ function toggleCaptions() {
     }
 }
 
-// 4. Helper VTT
+// 4. Tratamento de Eventos "Senior" (Buffer & Sync)
+videoEl.addEventListener('waiting', () => spinner.classList.remove('hidden'));
+videoEl.addEventListener('seeking', () => spinner.classList.remove('hidden'));
+videoEl.addEventListener('playing', () => spinner.classList.add('hidden'));
+videoEl.addEventListener('canplay', () => spinner.classList.add('hidden'));
+
+// Fix de Áudio Mudo ao Avançar
+videoEl.addEventListener('seeked', () => {
+    if (!videoEl.paused) {
+        // Pequeno delay para ressincronizar áudio/vídeo
+        setTimeout(() => {
+            videoEl.play().catch(e => console.log("Buffering...", e));
+        }, 100);
+    }
+});
+
+// 5. Conversor SRT
 function srtToVtt(data) {
     return "WEBVTT\n\n" + data.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
 }

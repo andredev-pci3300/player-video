@@ -17,16 +17,21 @@
         <main class="content-area">
             
             <div id="placeholder-message">
-                <p>🎬 Toque em um episódio para assistir.</p>
+                <p>🎬 Selecione um episódio para assistir.</p>
             </div>
 
             <div id="player-container" class="hidden">
                 <div class="video-wrapper">
                     <video id="main-video" controls controlsList="nodownload" playsinline>
+                        Seu navegador não suporta vídeos HTML5.
                     </video>
+
+                    <div id="loading-spinner" class="spinner-overlay hidden">
+                        <div class="spinner"></div>
+                    </div>
                 </div>
 
-                <div class="controls-bar" style="margin-top: 15px;">
+                <div class="controls-bar">
                     <button id="btn-cc" class="btn-control btn-cc-off" onclick="toggleCaptions()">
                         💬 Legenda: OFF
                     </button>
