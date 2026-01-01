@@ -1,6 +1,14 @@
 [
   {
-    "title": "1",
+    "title": "Episódio 1",
     "filename": "1.mkv"
+  },
+  {
+    "title": "Episódio 2",
+    "filename": "2.mkv"
+  },
+  {
+    "title": "Episódio 3",
+    "filename": "3.mkv"
   }
 ]
