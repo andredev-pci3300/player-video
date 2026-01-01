@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cine André</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -17,23 +17,22 @@
         <main class="content-area">
             
             <div id="placeholder-message">
-                <p>👈 Selecione um episódio ao lado para começar.</p>
+                <p>🎬 Toque em um episódio para assistir.</p>
             </div>
 
             <div id="player-container" class="hidden">
-                <div class="controls-bar">
+                <div class="video-wrapper">
+                    <video id="main-video" controls controlsList="nodownload" playsinline>
+                    </video>
+                </div>
+
+                <div class="controls-bar" style="margin-top: 15px;">
                     <button id="btn-cc" class="btn-control btn-cc-off" onclick="toggleCaptions()">
                         💬 Legenda: OFF
                     </button>
                 </div>
                 
                 <h2 id="player-title"></h2>
-                
-                <div class="video-wrapper">
-                    <video id="main-video" controls controlsList="nodownload" playsinline>
-                        Seu navegador não suporta HTML5.
-                    </video>
-                </div>
             </div>
 
         </main>
