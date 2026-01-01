@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Galeria de Vídeos</title>
+    <title>Cine André</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,8 +14,15 @@
         </div>
 
         <div id="player-view" class="hidden">
-            <button class="btn-back" onclick="closePlayer()">← Voltar</button>
+            <div class="controls-bar">
+                <button class="btn-control" onclick="closePlayer()">← Voltar</button>
+                <button id="btn-cc" class="btn-control btn-cc-off" onclick="toggleCaptions()">
+                    💬 Legenda: OFF
+                </button>
+            </div>
+            
             <h2 id="player-title">Título do Vídeo</h2>
+            
             <div class="video-wrapper">
                 <video id="main-video" controls controlsList="nodownload" playsinline>
                     Seu navegador não suporta HTML5.

@@ -5,13 +5,14 @@ const listView = document.getElementById('list-view');
 const playerView = document.getElementById('player-view');
 const videoEl = document.getElementById('main-video');
 const titleEl = document.getElementById('player-title');
+const ccButton = document.getElementById('btn-cc');
 
-// 1. Carregar lista (Suporta MKV e MP4)
+// 1. Carregar lista de vídeos
 fetch('videos.json')
     .then(r => r.json())
     .then(videos => {
         const list = document.getElementById('video-list');
-        list.innerHTML = ''; // Limpa lista antes de renderizar
+        list.innerHTML = ''; // Garante lista limpa
         videos.forEach(v => {
             const card = document.createElement('div');
             card.className = 'card';
@@ -19,20 +20,27 @@ fetch('videos.json')
             card.onclick = () => openPlayer(v);
             list.appendChild(card);
         });
-    });
+    })
+    .catch(err => console.error("Erro ao carregar JSON:", err));
 
+// 2. Abrir Player
 async function openPlayer(video) {
     listView.classList.add('hidden');
     playerView.classList.remove('hidden');
     titleEl.innerText = video.title;
     
-    // Define a fonte do vídeo (Seja .mp4 ou .mkv)
-    videoEl.src = `${R2_BUCKET_URL}/${video.filename}`;
-    videoEl.innerHTML = ''; // Limpa trilhas de legendas anteriores
+    // Reseta estado do botão de legenda
+    ccButton.innerText = "💬 Legenda: OFF";
+    ccButton.className = "btn-control btn-cc-off";
+    ccButton.style.display = 'none'; // Esconde até confirmar que existe legenda
 
-    // 2. Lógica Inteligente de Legenda
-    // Remove a extensão atual (.mp4 ou .mkv) e tenta buscar o .srt correspondente
-    const baseName = video.filename.split('.').slice(0, -1).join('.');
+    // Define fonte do vídeo
+    videoEl.src = `${R2_BUCKET_URL}/${video.filename}`;
+    videoEl.innerHTML = ''; // Limpa trilhas antigas
+
+    // Lógica para encontrar o nome do arquivo .srt
+    // Remove a extensão (.mp4 ou .mkv) e adiciona .srt
+    const baseName = video.filename.substring(0, video.filename.lastIndexOf('.'));
     const srtUrl = `${R2_BUCKET_URL}/${baseName}.srt`;
 
     try {
@@ -40,24 +48,54 @@ async function openPlayer(video) {
         if (res.ok) {
             const srtText = await res.text();
             const vttBlob = new Blob([srtToVtt(srtText)], { type: 'text/vtt' });
+            
             const track = document.createElement('track');
             track.kind = 'subtitles';
-            track.label = 'Português (Externo)';
+            track.label = 'Português';
             track.srclang = 'pt';
             track.src = URL.createObjectURL(vttBlob);
-            track.default = true;
+            
+            // CONFIGURAÇÃO CRÍTICA:
+            // Adiciona a trilha, mas não define como default
+            track.default = false; 
             videoEl.appendChild(track);
-        } else {
-            console.log('Nenhuma legenda externa .srt encontrada para este arquivo.');
+
+            // Força o modo 'hidden' (carregado mas invisível) após um breve delay
+            setTimeout(() => {
+                if (videoEl.textTracks[0]) {
+                    videoEl.textTracks[0].mode = 'hidden';
+                }
+            }, 100);
+            
+            // Mostra o botão pois a legenda existe
+            ccButton.style.display = 'inline-block';
         }
     } catch (err) {
-        console.warn('Erro ao processar legenda:', err);
+        console.warn('Sem legenda ou erro:', err);
     }
 
     videoEl.load();
     videoEl.play();
 }
 
+// 3. Função do Botão de Legenda
+function toggleCaptions() {
+    if (!videoEl.textTracks[0]) return;
+
+    const track = videoEl.textTracks[0];
+    
+    if (track.mode === 'showing') {
+        track.mode = 'hidden';
+        ccButton.innerText = "💬 Legenda: OFF";
+        ccButton.className = "btn-control btn-cc-off";
+    } else {
+        track.mode = 'showing';
+        ccButton.innerText = "💬 Legenda: ON";
+        ccButton.className = "btn-control btn-cc-on";
+    }
+}
+
+// 4. Fechar Player
 function closePlayer() {
     videoEl.pause();
     videoEl.src = '';
@@ -65,7 +103,7 @@ function closePlayer() {
     listView.classList.remove('hidden');
 }
 
-// Conversor SRT -> WebVTT (Essencial para navegadores)
+// 5. Conversor SRT -> WebVTT
 function srtToVtt(data) {
     let vtt = "WEBVTT\n\n";
     vtt += data.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
